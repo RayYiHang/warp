@@ -7,7 +7,8 @@ const ACTIVE_TOKEN_KEY = STORAGE_KEY_PREFIX + "active_token";
 const ACCOUNTS_KEY = STORAGE_KEY_PREFIX + "accounts";
 const SETTINGS_CACHE_KEY = STORAGE_KEY_PREFIX + "settings_cache";
 const LAST_TOKEN_CHECK_KEY = STORAGE_KEY_PREFIX + "last_token_check";
-const DB_API_URL = "http://127.0.0.1:8888"; // 本地数据库 API
+// 使用内置 Surge 脚本提供的本地 API 域名
+const DB_API_URL = "http://warp.local"; // 内置本地 API，无需外部 Python 服务
 
 // 工具函数
 function log(emoji, message) {
@@ -39,20 +40,19 @@ async function fetchAccountsFromDB() {
   try {
     const response = await $httpClient.get({
       url: `${DB_API_URL}/accounts`,
-      timeout: 5,
+      timeout: 8,
     });
-
     if (response.status === 200) {
-      const accounts = JSON.parse(response.body);
-      setStorageData(ACCOUNTS_KEY, accounts);
-      log("📦", `从数据库加载了 ${accounts.length} 个账号`);
-      return accounts;
+      const data = JSON.parse(response.body);
+      if (data.success && Array.isArray(data.accounts)) {
+        setStorageData(ACCOUNTS_KEY, data.accounts);
+        log("📦", `从内置 API 加载 ${data.accounts.length} 个账号`);
+        return data.accounts;
+      }
     }
-  } catch (error) {
-    log("❌", `获取账号列表失败: ${error}`);
+  } catch (e) {
+    log("⚠️", `内置 API 获取账号失败，使用缓存: ${e}`);
   }
-
-  // 失败时返回缓存
   return getStorageData(ACCOUNTS_KEY, []);
 }
 
@@ -64,23 +64,22 @@ async function getActiveToken() {
   // 如果没有活跃账号，尝试从数据库获取
   if (!activeEmail || !activeToken) {
     try {
-      const response = await $httpClient.get({
+      const resp = await $httpClient.get({
         url: `${DB_API_URL}/active-account`,
-        timeout: 5,
+        timeout: 8,
       });
-
-      if (response.status === 200) {
-        const data = JSON.parse(response.body);
-        activeEmail = data.email;
-        activeToken = data.token;
-
-        setStorageData(ACTIVE_EMAIL_KEY, activeEmail);
-        setStorageData(ACTIVE_TOKEN_KEY, activeToken);
-
-        log("🔑", `加载活跃账号: ${activeEmail}`);
+      if (resp.status === 200) {
+        const data = JSON.parse(resp.body);
+        if (data.success) {
+          activeEmail = data.email;
+          activeToken = data.token;
+          setStorageData(ACTIVE_EMAIL_KEY, activeEmail);
+          setStorageData(ACTIVE_TOKEN_KEY, activeToken);
+          log("🔑", `加载活跃账号: ${activeEmail}`);
+        }
       }
-    } catch (error) {
-      log("❌", `获取活跃账号失败: ${error}`);
+    } catch (e) {
+      log("⚠️", `内置 API 获取活跃账号失败: ${e}`);
       return null;
     }
   }
@@ -91,21 +90,21 @@ async function getActiveToken() {
 // 切换到下一个可用账号
 async function switchToNextAccount() {
   try {
-    const response = await $httpClient.post({
+    const resp = await $httpClient.post({
       url: `${DB_API_URL}/switch-account`,
-      timeout: 5,
+      timeout: 8,
     });
-
-    if (response.status === 200) {
-      const data = JSON.parse(response.body);
-      setStorageData(ACTIVE_EMAIL_KEY, data.email);
-      setStorageData(ACTIVE_TOKEN_KEY, data.token);
-
-      log("🔄", `切换到账号: ${data.email}`);
-      return true;
+    if (resp.status === 200) {
+      const data = JSON.parse(resp.body);
+      if (data.success) {
+        setStorageData(ACTIVE_EMAIL_KEY, data.email);
+        setStorageData(ACTIVE_TOKEN_KEY, data.token);
+        log("🔄", `切换到账号: ${data.email}`);
+        return true;
+      }
     }
-  } catch (error) {
-    log("❌", `切换账号失败: ${error}`);
+  } catch (e) {
+    log("⚠️", `切换账号失败: ${e}`);
   }
   return false;
 }
@@ -113,18 +112,18 @@ async function switchToNextAccount() {
 // 标记账号为已 ban
 async function markAccountBanned(email) {
   try {
-    await $httpClient.post({
+    const resp = await $httpClient.post({
       url: `${DB_API_URL}/ban-account`,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email }),
-      timeout: 5,
+      body: JSON.stringify({ email }),
+      timeout: 8,
     });
-    log("⛔", `账号已标记为 banned: ${email}`);
-
-    // 自动切换到下一个账号
-    await switchToNextAccount();
-  } catch (error) {
-    log("❌", `标记 ban 失败: ${error}`);
+    if (resp.status === 200) {
+      log("⛔", `账号已标记为 banned: ${email}`);
+      await switchToNextAccount();
+    }
+  } catch (e) {
+    log("⚠️", `标记 ban 失败: ${e}`);
   }
 }
 
