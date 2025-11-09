@@ -1,0 +1,109 @@
+{
+  "id": "warp.account.manager",
+  "name": "Warp Account Manager",
+  "keys": [
+    "warp_manager_active_email",
+    "warp_manager_active_token",
+    "warp_manager_accounts",
+    "warp_manager_settings_cache",
+    "warp_manager_last_token_check",
+    "warp_manager_config"
+  ],
+  "settings": [
+    {
+      "id": "warp_manager_config",
+      "name": "配置设置",
+      "val": {},
+      "type": "object",
+      "desc": "Warp Manager 配置"
+    }
+  ],
+  "author": "@WarpAccountManager",
+  "repo": "https://github.com/tuliodantasabsolar/warp.dev_account_manager",
+  "icons": [
+    "https://raw.githubusercontent.com/tuliodantasabsolar/warp.dev_account_manager/main/img/icon.png",
+    "https://raw.githubusercontent.com/tuliodantasabsolar/warp.dev_account_manager/main/img/icon.png"
+  ],
+  "script": "https://raw.githubusercontent.com/tuliodantasabsolar/warp.dev_account_manager/main/surge-module/warp-manager.js",
+  "apps": [
+    {
+      "id": "warp_account_panel",
+      "name": "Warp 账号管理",
+      "keys": ["warp_manager_active_email", "warp_manager_accounts"],
+      "icons": [
+        "https://raw.githubusercontent.com/tuliodantasabsolar/warp.dev_account_manager/main/img/icon.png"
+      ],
+      "author": "@WarpAccountManager",
+      "repo": "https://github.com/tuliodantasabsolar/warp.dev_account_manager",
+      "descs_html": [
+        "<h3>Warp AI 账号管理</h3>",
+        "<p>管理多个 Warp AI 账号，自动切换，避免 ban。</p>",
+        "<br>",
+        "<h4>功能特性</h4>",
+        "<ul>",
+        "<li>📋 多账号管理：添加、删除、激活账号</li>",
+        "<li>🔄 自动切换：检测到 ban 或 401 自动切换</li>",
+        "<li>🔑 Token 管理：自动更新和验证 token</li>",
+        "<li>📊 状态监控：实时显示账号状态</li>",
+        "<li>⚙️ 灵活配置：自定义切换策略</li>",
+        "</ul>"
+      ],
+      "scripts": [
+        {
+          "name": "账号列表",
+          "script": "https://raw.githubusercontent.com/tuliodantasabsolar/warp.dev_account_manager/main/surge-module/boxjs/accounts-list.html"
+        },
+        {
+          "name": "添加账号",
+          "script": "https://raw.githubusercontent.com/tuliodantasabsolar/warp.dev_account_manager/main/surge-module/boxjs/add-account.html"
+        },
+        {
+          "name": "切换账号",
+          "script": "https://raw.githubusercontent.com/tuliodantasabsolar/warp.dev_account_manager/main/surge-module/boxjs/switch-account.html"
+        },
+        {
+          "name": "系统设置",
+          "script": "https://raw.githubusercontent.com/tuliodantasabsolar/warp.dev_account_manager/main/surge-module/boxjs/settings.html"
+        }
+      ],
+      "settings": [
+        {
+          "id": "db_api_url",
+          "name": "数据库 API 地址",
+          "val": "http://127.0.0.1:8888",
+          "type": "text",
+          "placeholder": "http://127.0.0.1:8888",
+          "desc": "本地数据库 API 的 URL"
+        },
+        {
+          "id": "auto_switch",
+          "name": "自动切换账号",
+          "val": true,
+          "type": "boolean",
+          "desc": "检测到 ban 或 401 时自动切换到下一个账号"
+        },
+        {
+          "id": "block_rudderstack",
+          "name": "阻止 Rudderstack 追踪",
+          "val": true,
+          "type": "boolean",
+          "desc": "阻止 Warp 的数据追踪请求"
+        },
+        {
+          "id": "token_check_interval",
+          "name": "Token 检查间隔（分钟）",
+          "val": 5,
+          "type": "number",
+          "desc": "定期检查 token 有效性的时间间隔"
+        },
+        {
+          "id": "debug_mode",
+          "name": "调试模式",
+          "val": false,
+          "type": "boolean",
+          "desc": "启用详细的日志输出"
+        }
+      ]
+    }
+  ]
+}
